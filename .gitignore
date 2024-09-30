@@ -230,3 +230,970 @@ TO DISK = 'D:\REZERVNOKOPI\SQLTestDB.bak'
       MEDIANAME = 'SQLServerBackups',
       NAME = 'Full Backup of SQLTestDB';
 GO
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-------------------------------------------------------------------------------------------------------создание базы данных 
+
+CREATE DATABASE StudiaVisualisation
+use StudiaVisualisation
+--русский язык
+alter database StudiaVisualisation
+COLLATE Cyrillic_General_CI_Ai
+go
+
+---------------------------------------------------------------------------------------------------------создание таблиц
+
+USE StudiaVisualisation
+GO
+CREATE TABLE Работник(
+Шифр_Работника int not null identity(1,1),
+ФИО varchar(100) not null,
+Стаж varchar(100) not null,
+Должность varchar(100) not null,
+Зарплата money not null,
+номер_телефона varchar(100) not null
+PRIMARY KEY (Шифр_Работника)
+)
+
+create table Услуги(
+код_услуги int not null identity(1,1),
+название varchar(50) not null,
+стоимость money not null,
+PRIMARY KEY (код_услуги)
+)
+
+create table Клиент(
+Шифр_клиента int not null identity(1,1),
+ФИО_или_название_клиента varchar(50) not null,
+Телефон_клиента varchar(16) not null,
+Email_клиента varchar(50) not null
+PRIMARY KEY (Шифр_клиента)
+)
+
+create table Заказы(
+Шифр_заказа int not null identity(1,1),
+Шифр_клиента int not null,
+Шифр_Работника int,
+Дедлайн date not null,
+код_услуги int
+PRIMARY KEY (Шифр_заказа)
+)
+
+create table Отзывы(
+номер_отзыва int not null identity(1,1),
+Шифр_клиента int,
+Отзыв varchar(300) not null,
+PRIMARY KEY (номер_отзыва)
+)
+
+--ОБЩЕЕ КОЛИЧЕСТВО ОТЗЫВОВ
+SELECT COUNT(*)
+FROM Отзывы;
+
+--КОПИРОВАНИЕ ТАБЛИЦЫ ИЗ ОДНОЙ БД В ДРУГУЮ
+INSERT INTO database2.table2 SELECT * from database1.table1
+------------------------------------------------------------------------------------------------------------Создание внешних ключей
+
+Alter table Заказы
+ADD CONSTRAINT Rabotnic_fk Foreign key (Шифр_Работника) REFERENCES Работник(Шифр_Работника) on delete cascade on update cascade
+
+Alter table Заказы
+ADD CONSTRAINT код_услуги_fk Foreign key (код_услуги) REFERENCES Услуги(код_услуги) on delete cascade
+on update cascade
+
+Alter table Заказы
+ADD CONSTRAINT Шифр_клиента_fk Foreign key (Шифр_клиента) REFERENCES Клиент(Шифр_клиента) on delete cascade
+on update cascade
+
+Alter table Отзывы
+ADD CONSTRAINT Шифр_клиента1_fk Foreign key (Шифр_клиента) REFERENCES Клиент(Шифр_клиента) on delete cascade
+on update cascade
+
+/* Создание чеков */
+
+Alter table Работник
+ADD CONSTRAINT Работник_телефон_ck
+CHECK (номер_телефона LIKE ('[+][7][(][0-9][0-9][0-9][)][0-9][0-9][0-9][-][0-9][0-9][0-9][0-9]'))
+
+Alter table Клиент
+ADD CONSTRAINT Клиент_телефон_ck
+CHECK (Email_клиента LIKE ('%[gmail.com]'))
+
+-------------------------------------------------------------------------------------------------------------------Вносим данные
+
+INSERT INTO Работник (ФИО, Стаж, Должность, Зарплата, номер_телефона)
+VALUES 
+('Иванова Елена Максимовна', '6', 'архитерктор', '70000', '+7(953)527-7220'),
+('Морозов Денис Валерьевич', '4', 'Дизайнер интерьера', '76000', '+7(953)527-7221'),
+('Васильева Ольга Ивановна', '5', 'аниматор', '100000', '+7(953)527-7222'),
+('Сорокина Мария Павловна', '2', 'VFX-художник', '92000', '+7(953)527-7223'),
+('Волков Григорий Владимирович', '6', 'монтажёр', '74000', '+7(953)527-7224'),
+('Маликова Дарья Владиславовна', '2', 'художник по текстурам', '64000', '+7(953)527-7225'),
+('Шубина Алена Юрьевна', '2', 'Риггер', '100000', '+7(953)527-7226');
+
+INSERT INTO Заказы (Шифр_клиента, Шифр_Работника, Дедлайн, код_услуги)
+VALUES 
+('1', '2', '13.12.2023', '1'),
+('2', '5', '31.12.2023', '3'),
+('3', '5', '23.12.2023', '2'),
+('4', '6', '13.12.2023', '5'),
+('5', '6', '26.12.2023', '4'),
+('6', '3', '16.12.2023', '4'),
+('7', '2', '15.12.2023', '1');
+
+INSERT INTO Клиент(ФИО_или_название_клиента, Телефон_клиента, Email_клиента)
+VALUES 
+('Иванов Иван Иванович', '+7(912)345-6789', 'ivanov@gmail.com'),
+('Сидорова Анна Александровна', '+7(934)567-8901', 'sidorova@gmail.com'),
+('Yota', '+7(867)304-9553', 'Yota@gmail.com'),
+('Mail.ru group', '+7(923)432-5656', 'Mailgroup@gmail.com'),
+('Данилов Егор Викторович', '+7(901)456-7890', 'danilov@gmail.com'),
+('Ситилинг', '+7(932)483-5931', 'Sitiling@gmail.com'),
+('Яндекс', '+7(923)432-5723', 'Yandex@gmail.com');
+
+drop table Клиент
+drop table Услуги
+drop table Заказы
+drop table Работник
+drop table Отзывы
+
+INSERT INTO Услуги(название, стоимость)
+VALUES 
+('Смоделировать объект', '50000'),
+('Смоделировать модель персонажа', '70000'),
+('анимация', '70000'),
+('наложить текстуры', '20000'),
+('рендер анимации', '65000'),
+('сделать композицию', '20000'),
+('Motion design', '50000');
+
+INSERT INTO Отзывы(Шифр_клиента, Отзыв)
+VALUES 
+('1', 'Очень профессиональные услуги по 3D визуализации! Быстро и качественно.'),
+('2', 'Отличные результаты работы студии 3D визуализации, рекомендую всем!'),
+('3', 'Визуализация выполнена с высокой точностью, всё выглядит реалистично.'),
+('4', 'Команда студии 3D визуализации воссоздала наши идеи совершенно точно.'),
+('5', 'Прекрасное качество визуализации, все детали выглядят очень реалистично.'),
+('6', 'Работы студии 3D визуализации вызывают восторг у наших клиентов.'),
+('7', 'Визуализация студии 3D Визуализации помогает нам в продажах.');
+
+-------------------------------------------------------------------------Создаём триггер и привязываем его к таблице в БД, он срабатывает при добавлении новых даных в таблицу
+
+/* а) */
+
+--1--
+USE StudiaVisualisation
+GO
+
+CREATE TRIGGER dbo.insertindicator12
+ON dbo.Работник
+AFTER INSERT
+AS
+BEGIN
+    -- Печатаем сообщение о срабатывании триггера
+    PRINT 'The insert trigger fired'
+
+    -- Логируем информацию о вставленных записях в сообщения сервера
+    DECLARE @message NVARCHAR(MAX)
+    SELECT @message = COALESCE(@message + CHAR(13) + CHAR(10), '') +
+                      'Шифр_Работника: ' + CAST(i.Шифр_Работника AS NVARCHAR(50)) + ', ' +
+                      'ФИО: ' + i.ФИО + ', ' +
+                      'Стаж: ' + CAST(i.Стаж AS NVARCHAR(50)) + ', ' +
+                      'Должность: ' + i.Должность + ', ' +
+                      'Зарплата: ' + CAST(i.Зарплата AS NVARCHAR(50)) + ', ' +
+                      'Номер_телефона: ' + i.Номер_телефона
+    FROM inserted i
+
+    RAISERROR (@message, 0, 1) WITH NOWAIT
+
+    -- Отправка электронного уведомления (комментарий, как это может быть реализовано)
+    -- EXEC msdb.dbo.sp_send_dbmail
+    --    @profile_name = 'your_profile_name',
+    --    @recipients = 'recipient@example.com',
+    --    @subject = 'New Employee Inserted',
+    --    @body = @message;
+END
+GO
+
+-- проверка --
+INSERT INTO Работник (ФИО, Стаж, Должность, Зарплата, номер_телефона)
+VALUES 
+('Ананасов Дмитрий Дмитриевич', '5', 'архитерктор', '70000', '+7(953)527-7252')
+
+--2--
+CREATE TRIGGER dbo.insertClientIndicator
+ON dbo.Клиент
+AFTER INSERT
+AS
+BEGIN
+    -- Печатаем сообщение о срабатывании триггера
+    PRINT 'The insert trigger fired'
+
+    -- Логируем информацию о новых клиентах в сообщения сервера
+    DECLARE @message NVARCHAR(MAX)
+    SELECT @message = COALESCE(@message + CHAR(13) + CHAR(10), '') +
+                      'Шифр_клиента: ' + CAST(i.Шифр_клиента AS NVARCHAR(50)) + ', ' +
+                      'ФИО_или_название_клиента: ' + CAST(i.ФИО_или_название_клиента AS NVARCHAR(100)) + ', ' +
+                      'Телефон_клиента: ' + CAST(i.Телефон_клиента AS NVARCHAR(20)) + ', ' +
+                      'Email_клиента: ' + CAST(i.Email_клиента AS NVARCHAR(100))
+    FROM inserted i
+
+    RAISERROR (@message, 0, 1) WITH NOWAIT
+
+    -- Проверка, если email клиента имеет недопустимый формат (не содержит '@')
+    DECLARE @count INT
+    SELECT @count = COUNT(*)
+    FROM inserted
+    WHERE Email_клиента NOT LIKE '%@%'
+
+    IF @count > 0
+    BEGIN
+        DECLARE @warning NVARCHAR(200) = 'Warning: Some new clients have invalid email addresses!'
+        RAISERROR (@warning, 16, 1) WITH NOWAIT
+
+        -- Отправка электронного уведомления (комментарий, как это может быть реализовано)
+        -- EXEC msdb.dbo.sp_send_dbmail
+        --    @profile_name = 'your_profile_name',
+        --    @recipients = 'admin@example.com',
+        --    @subject = 'New Client Inserted with Invalid Email',
+        --    @body = @warning + CHAR(13) + CHAR(10) + @message;
+    END
+END
+GO
+
+-- проверка --
+INSERT INTO dbo.Клиент (ФИО_или_название_клиента, Телефон_клиента, Email_клиента)
+VALUES ('Иван Иванов', '123-456-7890', 'ivan@example.com');
+
+-- Вставка данных с недопустимым email
+INSERT INTO dbo.Клиент (ФИО_или_название_клиента, Телефон_клиента, Email_клиента)
+VALUES ('Петр Петров', '098-765-4321', 'petr.example.com');
+
+--3--
+CREATE TRIGGER dbo.insertindicator21
+ON dbo.Заказы
+AFTER INSERT
+AS
+BEGIN
+    -- Печатаем сообщение о срабатывании триггера
+    PRINT 'The insert trigger fired'
+
+    -- Логируем информацию о новых заказах в сообщения сервера
+    DECLARE @message NVARCHAR(MAX)
+    SELECT @message = COALESCE(@message + CHAR(13) + CHAR(10), '') +
+                      'Шифр_заказа: ' + CAST(i.Шифр_заказа AS NVARCHAR(50)) + ', ' +
+                      'Шифр_клиента: ' + CAST(i.Шифр_клиента AS NVARCHAR(50)) + ', ' +
+                      'Шифр_Работника: ' + CAST(i.Шифр_Работника AS NVARCHAR(50)) + ', ' +
+                      'Дедлайн: ' + CAST(i.Дедлайн AS NVARCHAR(50)) + ', ' +
+                      'код_услуги: ' + CAST(i.код_услуги AS NVARCHAR(50))
+    FROM inserted i
+
+    RAISERROR (@message, 0, 1) WITH NOWAIT
+
+    -- Проверка, если дедлайн заказа меньше текущей даты, уведомляем администратора
+    DECLARE @count INT
+    SELECT @count = COUNT(*)
+    FROM inserted
+    WHERE Дедлайн < GETDATE()
+
+    IF @count > 0
+    BEGIN
+        DECLARE @warning NVARCHAR(200) = 'Warning: Some new orders have deadlines in the past!'
+        RAISERROR (@warning, 16, 1) WITH NOWAIT
+
+        -- Отправка электронного уведомления (комментарий, как это может быть реализовано)
+        -- EXEC msdb.dbo.sp_send_dbmail
+        --    @profile_name = 'your_profile_name',
+        --    @recipients = 'admin@example.com',
+        --    @subject = 'New Order Inserted with Past Deadline',
+        --    @body = @warning + CHAR(13) + CHAR(10) + @message;
+    END
+END
+GO
+
+-- проверка --
+-- Вставка данных с дедлайном в будущем
+INSERT INTO dbo.Заказы (Шифр_клиента, Шифр_Работника, Дедлайн, код_услуги)
+VALUES (1, 1, DATEADD(DAY, 10, GETDATE()), 1);
+
+-- Вставка данных с дедлайном в прошлом
+INSERT INTO dbo.Заказы (Шифр_клиента, Шифр_Работника, Дедлайн, код_услуги)
+VALUES (2, 2, DATEADD(DAY, -10, GETDATE()), 2);
+
+/* b) */
+
+--1--
+CREATE TRIGGER dbo.updateindicator
+On dbo.Работник
+AFTER UPDATE
+AS 
+PRINT 'The update trigger fired'
+GO
+
+-- проверка --
+UPDATE dbo.Работник
+SET ФИО = 'Новый ФИО', Стаж = 10, Должность = 'Новая должность', Зарплата = 50000, номер_телефона = '+7(953)527-7253'
+WHERE Шифр_Работника = 1;
+
+--2--
+CREATE TRIGGER dbo.updateindicator
+On dbo.Заказы
+AFTER UPDATE
+AS 
+PRINT 'The update trigger fired'
+GO
+
+--проверка--
+UPDATE dbo.Заказы
+SET Дедлайн = DATEADD(DAY, 5, GETDATE()), код_услуги = 3
+WHERE Шифр_заказа = 1;
+
+--3--
+CREATE TRIGGER dbo.updateindicator
+On dbo.Услуги
+AFTER UPDATE
+AS 
+PRINT 'The update trigger fired'
+GO
+
+-- проверка --
+UPDATE dbo.Услуги
+SET стоимость = стоимость * 1.10  -- увеличим стоимость на 10%
+WHERE код_услуги = 1;
+
+/* с) */
+
+--1--
+CREATE TRIGGER dbo.deleteindicator
+ON dbo.Работник
+AFTER DELETE
+AS
+IF @@ROWCOUNT <> 0
+PRINT 'The delete trigger fired.'
+
+-- проверка --
+DELETE FROM dbo.Работник
+WHERE Шифр_Работника = 1;
+
+--2--
+CREATE TRIGGER dbo.deleteindicator12
+ON dbo.Клиент
+AFTER DELETE
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @ClientID INT;
+    DECLARE @ClientName NVARCHAR(100);
+
+    -- Получаем данные удалённого клиента
+    SELECT @ClientID = Шифр_клиента,
+           @ClientName = ФИО_или_название_клиента
+    FROM deleted;
+
+    -- Выводим сообщение о том, что триггер сработал
+    IF @@ROWCOUNT <> 0
+        PRINT 'Удалён клиент ' + @ClientName + ' (ID: ' + CAST(@ClientID AS NVARCHAR(10)) + ').';
+END;
+
+--проверка --
+DELETE FROM dbo.Клиент
+WHERE Шифр_клиента = 1;
+
+--3--
+CREATE TRIGGER dbo.deleteindicatorU1
+ON dbo.Услуги
+AFTER DELETE
+AS
+IF @@ROWCOUNT <> 0
+PRINT 'The delete trigger fired.'
+
+-- проверка --
+DELETE FROM dbo.Услуги
+WHERE код_услуги = 1;
+
+----------------------------------------------------------------------------------------------------------------------------------------создание процедур
+
+-- запись --
+-- 1 --
+Create Proc new_customer
+(
+@FIO varchar(100),
+@STASH varchar(100),
+@DOLSNOST varchar(100),
+@ZARPLATA money,
+@NOMER_TELEFONA varchar(100)
+)
+as
+insert into Работник (ФИО, Стаж, Должность, Зарплата, номер_телефона)
+values (@FIO, @STASH, @DOLSNOST, @ZARPLATA, @NOMER_TELEFONA)
+go
+
+-- проверка --
+EXEC new_customer
+    @FIO = 'Иванов Иван Иванович',
+    @STASH = '5',
+    @DOLSNOST = 'Инженер-программист',
+    @ZARPLATA = 70000,
+    @NOMER_TELEFONA = '+7(953)527-7254';
+
+-- 2 --
+CREATE PROCEDURE new_uslugi1
+(
+    @nazvanie VARCHAR(50),
+    @stoimost MONEY
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Проверяем, существует ли уже услуга с таким же названием
+    IF EXISTS (SELECT 1 FROM Услуги WHERE [название] = @nazvanie)
+    BEGIN
+        PRINT 'Услуга с названием "' + @nazvanie + '" уже существует. Новая запись не добавлена.';
+    END
+    ELSE
+    BEGIN
+        -- Вставляем новую услугу
+        INSERT INTO Услуги ([название], [стоимость])
+        VALUES (@nazvanie, @stoimost);
+
+        PRINT 'Новая услуга "' + @nazvanie + '" успешно добавлена.';
+    END
+END;
+
+-- проверка --
+EXEC new_uslugi1
+    @nazvanie = 'Топология',
+    @stoimost = 1500.00;
+
+
+-- 3 --
+Create Proc new_otzovi
+(
+@shifr_clienta int,
+@ozov varchar(300)
+)
+as
+insert into Отзывы (Шифр_клиента, Отзыв)
+values (@shifr_clienta, @ozov)
+go
+
+-- проверка --
+EXEC new_otzovi
+    @shifr_clienta = 8,
+    @ozov = 'Отличное обслуживание! Буду рекомендовать вашу компанию друзьям.';
+
+-- 4 --
+CREATE PROCEDURE new_client1
+(
+    @FIO_ili_nazvanie VARCHAR(50),
+    @TelefonCL VARCHAR(16),
+    @Email_clienta VARCHAR(50)
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Проверяем, существует ли уже клиент с таким же телефоном или email
+    IF EXISTS (SELECT 1 FROM Клиент WHERE Телефон_клиента = @TelefonCL)
+    BEGIN
+        PRINT 'Клиент с таким номером телефона уже существует. Новая запись не добавлена.';
+    END
+    ELSE IF EXISTS (SELECT 1 FROM Клиент WHERE Email_клиента = @Email_clienta)
+    BEGIN
+        PRINT 'Клиент с таким email уже существует. Новая запись не добавлена.';
+    END
+    ELSE
+    BEGIN
+        -- Вставляем нового клиента
+        INSERT INTO Клиент (ФИО_или_название_клиента, Телефон_клиента, Email_клиента)
+        VALUES (@FIO_ili_nazvanie, @TelefonCL, @Email_clienta);
+
+        PRINT 'Новый клиент "' + @FIO_ili_nazvanie + '" успешно добавлен.';
+    END
+END;
+
+-- проверка --
+EXEC new_client1
+    @FIO_ili_nazvanie = 'Иванов Иван',
+    @TelefonCL = '123-456-7891',
+    @Email_clienta = 'ivanov@example.com';
+
+-- 5 --
+Create Proc new_Zacazi
+( 
+@shifr_clienta int,
+@shifr_rabotnica int,
+@dedline date,
+@cod_uslugi int
+)
+as
+insert into Заказы (Шифр_клиента, Шифр_Работника, Дедлайн, код_услуги)
+values (@shifr_clienta, @shifr_rabotnica, @dedline, @cod_uslugi)
+go
+
+-- проверка --
+EXEC new_Zacazi
+    @shifr_clienta = 8,
+    @shifr_rabotnica = 2,
+    @dedline = '2024-06-30',
+    @cod_uslugi = 3;
+
+-- обновление --
+-- 1 --
+Create Proc update_uslugiStoimost
+(
+@stoimost money,
+@NEWstoimost money
+)
+as
+update Услуги set стоимость = @NEWstoimost
+where стоимость = @stoimost
+go
+
+-- проверка --
+EXEC update_uslugiStoimost
+    @stoimost = 1500,  -- Старая стоимость
+    @NEWstoimost = 5000;  -- Новая стоимость
+
+-- 2 --
+CREATE PROCEDURE update_Otzovi1
+(
+    @Otzov VARCHAR(300),
+    @NEWotzov VARCHAR(300)
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Проверяем, существует ли отзыв с указанным текстом
+    IF NOT EXISTS (SELECT 1 FROM Отзывы WHERE Отзыв = @Otzov)
+    BEGIN
+        PRINT 'Отзыв с текстом "' + @Otzov + '" не найден. Обновление отзыва не выполнено.';
+    END
+    ELSE
+    BEGIN
+        -- Обновляем отзыв
+        UPDATE Отзывы SET Отзыв = @NEWotzov
+        WHERE Отзыв = @Otzov;
+
+        PRINT 'Отзыв с текстом "' + @Otzov + '" успешно обновлён на "' + @NEWotzov + '".';
+    END
+END;
+
+-- проверка --
+EXEC update_Otzovi1
+    @Otzov = 'Работы студии 3D визуализации вызывают восторг у наших клиентов.',
+    @NEWotzov = 'Отличный сервис! Спасибо вам!';
+
+-- 3 --
+Create Proc update_Rabotnic_Stash
+(
+@stash varchar(100),
+@NEWstash varchar(100)
+)
+as
+update Работник set Стаж = @NEWstash
+where Стаж = @stash
+go
+
+-- проверка --
+EXEC update_Rabotnic_Stash
+    @stash = '5',
+    @NEWstash = '6';
+
+-- удаление --
+-- 1 --
+Create Proc delete_RabotnicTelefon
+(@NOMER_TELEFONA varchar(100))
+as
+delete from Работник
+where [номер_телефона] = @NOMER_TELEFONA
+go
+
+-- проверка --
+EXEC delete_RabotnicTelefon
+    @NOMER_TELEFONA = '+7(953)527-7223';
+
+-- 2 --
+Create Proc delete_Otzovi
+(@Otziv int)
+as
+delete from Отзывы
+where [номер_отзыва] = @Otziv
+go
+
+-- проверка --
+EXEC delete_Otzovi
+@Otziv = 1;
+
+-- 3 --
+CREATE PROCEDURE delete_Zakaz
+(
+    @Shifr_zakaza INT
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Проверяем, существует ли заказ с указанным шифром
+    IF NOT EXISTS (SELECT 1 FROM Заказы WHERE Шифр_заказа = @Shifr_zakaza)
+    BEGIN
+        PRINT 'Заказ с шифром ' + CAST(@Shifr_zakaza AS VARCHAR(10)) + ' не найден. Удаление заказа не выполнено.';
+    END
+    ELSE
+    BEGIN
+        -- Удаляем заказ
+        DELETE FROM Заказы
+        WHERE Шифр_заказа = @Shifr_zakaza;
+
+        PRINT 'Заказ с шифром ' + CAST(@Shifr_zakaza AS VARCHAR(10)) + ' успешно удалён.';
+    END
+END;
+
+-- проверка --
+EXEC delete_Zakaz
+@Shifr_zakaza = 1;
+
+-- поиск --
+-- 1 --
+Create Proc find_client
+(@FIO_ili_nazvanie varchar(50))
+as
+select [ФИО_или_название_клиента], [Телефон_клиента], [Email_клиента]
+from Клиент
+where [ФИО_или_название_клиента] IN
+(Select [ФИО_или_название_клиента]
+from Клиент
+where [ФИО_или_название_клиента] = @FIO_ili_nazvanie)
+go
+
+-- проверка --
+EXEC find_client
+@FIO_ili_nazvanie = 'Иванов Иван';
+
+-- 2 --
+Create Proc find_Uslugu
+(@nazvanie varchar(50))
+as
+select [Название], [стоимость]
+from Услуги
+where [Название] IN
+(Select [Название]
+from Услуги
+where [Название] = @nazvanie)
+go
+
+-- проверка --
+EXEC find_Uslugu
+@nazvanie = 'Смоделировать модель персонажа';
+
+-- 3 --
+CREATE PROCEDURE find_Rabotnika
+(
+    @FIO varchar(100)
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Проверяем, существует ли работник с указанным ФИО
+    IF NOT EXISTS (SELECT 1 FROM Работник WHERE ФИО = @FIO)
+    BEGIN
+        PRINT 'Работник с ФИО "' + @FIO + '" не найден.';
+    END
+    ELSE
+    BEGIN
+        -- Выводим информацию о работнике
+        SELECT Шифр_Работника, ФИО, Стаж, Должность, Зарплата, номер_телефона
+        FROM Работник
+        WHERE ФИО = @FIO;
+    END
+END;
+
+-- проверка --
+EXEC find_Rabotnika
+@FIO = 'Иванов Иван Иванович';
+
+---------------------------------------------------------------------------------------------------------------------------------------------Разработка и создание представлений
+
+-- вывод данных --
+
+-- 1 --
+create view Zacazi1_info as
+select z.[Шифр_клиента], z.[Дедлайн], z.[код_услуги], u.[название]
+from Заказы z join Услуги u on u.[код_услуги] = z.[код_услуги]
+where u.[название] <> 'сделать композицию'
+go
+
+select * from Zacazi1_info
+
+-- 2 --
+CREATE VIEW Rabotnic_info AS
+SELECT DISTINCT r.[ФИО], r.[Стаж], r.[Должность], r.[Зарплата], z.[Шифр_Работника], z.[код_услуги]
+FROM Заказы z
+JOIN Работник r ON z.Шифр_Работника = r.Шифр_Работника
+WHERE r.[Стаж] < 3;
+
+select * from Rabotnic_info
+
+-- 3 --
+CREATE VIEW Uslugi_info AS
+SELECT z.[Шифр_клиента], z.[Дедлайн], z.[код_услуги], z.[Шифр_Работника], u.[название], u.[стоимость]
+FROM Заказы z
+JOIN (
+    SELECT DISTINCT [код_услуги], [название], [стоимость]
+    FROM Услуги
+    WHERE [стоимость] > 50000
+) AS u ON z.[код_услуги] = u.[код_услуги];
+
+select * from Uslugi_info
+
+-- 4 --
+create view OrderClientInfo as
+select z.[Шифр_заказа], z.[Шифр_клиента], c.[ФИО_или_название_клиента], c.[Телефон_клиента], c.[Email_клиента], z.[Дедлайн], z.[код_услуги], u.[название] as [Название_услуги], u.[стоимость] as [Стоимость_услуги]
+from [Заказы] z
+ join [Клиент] c on z.[Шифр_клиента] = c.[Шифр_клиента]
+ join [Услуги] u on z.[код_услуги] = u.[код_услуги]
+go
+
+select * from OrderClientInfo
+
+-- 5 --
+create view OrderWorkerInfo as
+select z.[Шифр_заказа], z.[Шифр_Работника], r.[ФИО] as [ФИО_Работника], r.[Стаж], r.[Должность], r.[Зарплата], r.[номер_телефона] as [Телефон_Работника], z.[Шифр_клиента], c.[ФИО_или_название_клиента] as [Клиент], z.[Дедлайн], z.[код_услуги], u.[название] as [Название_услуги]
+from [Заказы] z
+ join [Работник] r on z.[Шифр_Работника] = r.[Шифр_Работника]
+ join [Клиент] c on z.[Шифр_клиента] = c.[Шифр_клиента]
+ join [Услуги] u on z.[код_услуги] = u.[код_услуги]
+go
+
+select * from OrderWorkerInfo
+
+-- расчётные поля --
+-- 1 --
+create view DateDedline as
+select z.[Шифр_клиента], z.[Дедлайн], z.[код_услуги],
+datediff (day, z.[Дедлайн], getdate()) as [дней прошло]
+from Заказы z
+go
+
+select * from DateDedline
+
+-- 2 --
+CREATE VIEW OrderCost AS
+SELECT z.Шифр_клиента, c.ФИО_или_название_клиента AS Клиент, SUM(u.стоимость) AS Общая_стоимость
+FROM Заказы z
+JOIN Услуги u ON z.код_услуги = u.код_услуги
+JOIN Клиент c ON z.Шифр_клиента = c.Шифр_клиента
+GROUP BY z.Шифр_клиента, c.ФИО_или_название_клиента;
+
+select * from OrderCost
+
+-- 3 -- -- посмотреть --
+CREATE VIEW AverageOrderCost AS
+SELECT
+AVG(u.стоимость) AS Средняя_стоимость_заказа
+FROM
+Заказы z
+JOIN
+Услуги u ON z.код_услуги = u.код_услуги;
+
+select * from AverageOrderCost
+
+-- груповые --
+-- 1 --
+CREATE VIEW COLIC_ZACAZOV AS
+SELECT
+z.Шифр_клиента,
+u.название,
+COUNT(*) AS [Количество_заказов]
+FROM
+Заказы z
+JOIN
+Услуги u ON z.код_услуги = u.код_услуги
+GROUP BY
+z.Шифр_клиента, u.название;
+
+select * from COLIC_ZACAZOV
+
+-- 2 --
+create view Zarplata_V_YEAR as
+select r.[ФИО], r.[Стаж], r.[Должность], ((r.[Зарплата])*12) as [Зарплата в год]
+from Работник r
+go
+
+select * from Zarplata_V_YEAR
+
+-- 3 --
+create view OrderCountPerWorker as
+select z.[Шифр_Работника], r.[ФИО], count(z.[Шифр_заказа]) as [Количество_заказов]
+from [Заказы] z
+join [Работник] r on z.[Шифр_Работника] = r.[Шифр_Работника]
+group by z.[Шифр_Работника], r.[ФИО]
+go
+
+select * from OrderCountPerWorker
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------создание индексов
+create Index Shifr_Clienta on Заказы([Шифр_клиента])
+create Index Email_Clienta on Клиент([Email_клиента])
+create Index Otziv_Clienta on Отзывы([Отзыв])
+create Index Rabotnic_Zarplata on Работник([номер_телефона])
+create Index Stoimost_Uslugi on Услуги([стоимость])
+
+sp_helpindex Заказы
+sp_helpindex Клиент
+sp_helpindex Отзывы
+sp_helpindex Работник
+sp_helpindex Услуги
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------создание пользователей
+
+-- создание пользователей --
+create login Ilia with password = 'P@ssw0rd'
+create login Dasha228 with password = 'P@ssw0rd'
+create login Liza with password = 'P@ssw0rd'
+create login Ivan228 with password = 'P@ssw0rd'
+create login Sasha with password = 'P@ssw0rd'
+
+CREATE USER Ilia FOR LOGIN Ilia;
+CREATE USER Dasha228 FOR LOGIN Dasha228;
+CREATE USER Liza FOR LOGIN Liza;
+CREATE USER Ivan228 FOR LOGIN Ivan228;
+CREATE USER Sasha FOR LOGIN Sasha;
+
+-- создание роли --
+create role Rabotnic
+create role admin_server
+
+sp_addrolemember 'admin_server', 'Dasha228'
+sp_addrolemember 'Rabotnic', 'Sasha'
+
+-- Создание схемы для пользователей с ролью Rabotnic
+CREATE SCHEMA RabotnicSchema AUTHORIZATION Rabotnic;
+
+-- Создание схемы для пользователей с ролью admin_server
+CREATE SCHEMA AdminSchema AUTHORIZATION admin_server;
+
+-- Предоставление разрешений для роли Rabotnic
+GRANT SELECT, INSERT, UPDATE ON dbo.Заказы TO Rabotnic;
+GRANT SELECT ON dbo.Работник TO Rabotnic;
+GRANT SELECT, INSERT, UPDATE, DELETE ON dbo.Отзывы TO Rabotnic;
+
+-- Предоставление разрешений для роли admin_server
+GRANT SELECT, INSERT, UPDATE, DELETE ON dbo.Заказы TO admin_server;
+GRANT SELECT, INSERT, UPDATE, DELETE ON dbo.Клиент TO admin_server;
+GRANT SELECT, INSERT, UPDATE, DELETE ON dbo.Отзывы TO admin_server;
+GRANT SELECT, INSERT, UPDATE, DELETE ON dbo.Работник TO admin_server;
+GRANT SELECT, INSERT, UPDATE, DELETE ON dbo.Услуги TO admin_server;
+
+-- Разрешения для Ilia
+GRANT SELECT, INSERT, UPDATE, DELETE ON dbo.Отзывы TO Ilia;
+GRANT SELECT ON dbo.Клиент TO Ilia;
+GRANT SELECT ON dbo.Заказы TO Ilia;
+GRANT SELECT ON dbo.Услуги TO Ilia;
+GRANT SELECT ON dbo.Работник TO Ilia;
+
+-- Разрешения для Liza
+GRANT SELECT, INSERT, UPDATE, DELETE ON dbo.Отзывы TO Liza;
+GRANT SELECT ON dbo.Клиент TO Liza;
+GRANT SELECT ON dbo.Заказы TO Liza;
+GRANT SELECT ON dbo.Услуги TO Liza;
+GRANT SELECT ON dbo.Работник TO Liza;
+
+-- Разрешения для Ivan228
+GRANT SELECT, INSERT, UPDATE, DELETE ON dbo.Отзывы TO Ivan228;
+GRANT SELECT ON dbo.Клиент TO Ivan228;
+GRANT SELECT ON dbo.Заказы TO Ivan228;
+GRANT SELECT ON dbo.Услуги TO Ivan228;
+GRANT SELECT ON dbo.Работник TO Ivan228;
+--------------------------------------------------------------------------------------------------------------------------------------------------Резервное копирование
+USE msdb;
+GO
+
+-- Создание задания резервного копирования
+EXEC dbo.sp_add_job
+    @job_name = N'Full_Backup_Job',
+    @enabled = 1,
+    @description = N'Job to perform full backup of StudiaVisualisation database',
+    @category_name = N'Database Maintenance';
+GO
+
+-- Добавление шага к заданию
+EXEC dbo.sp_add_jobstep
+    @job_name = N'Full_Backup_Job',
+    @step_name = N'Full_Backup_Step',
+    @subsystem = N'TSQL',
+    @command = N'BACKUP DATABASE StudiaVisualisation TO DISK = ''C:\Backup\StudiaVisualisation_Full.bak'' WITH INIT;',
+    @retry_attempts = 5,
+    @retry_interval = 5;
+GO
+
+-- Создание расписания для выполнения задания ежедневно в 23:30
+EXEC dbo.sp_add_schedule
+    @schedule_name = N'Daily_Full_Backup',
+    @freq_type = 4,  -- daily
+    @freq_interval = 1,  -- every day
+    @active_start_time = 233000;  -- 11:30 PM
+GO
+
+-- Присоединение расписания к заданию
+EXEC dbo.sp_attach_schedule
+    @job_name = N'Full_Backup_Job',
+    @schedule_name = N'Daily_Full_Backup';
+GO
+
+-- Присоединение задания к серверу
+EXEC dbo.sp_add_jobserver
+    @job_name = N'Full_Backup_Job';
+GO
+
+-- Добавление шага для резервного копирования журнала транзакций
+EXEC dbo.sp_add_jobstep
+@job_name = N'Full_Backup_job',
+@step_name = N'Transaction_Log_Backup-Step',
+@subsystem = N'TSQL',
+@command = N'BACKUP LOG StudiaVisualisation TO DISK = ''C:\Backup\StudiaVisualisation_Log.trn'';',
+@retry_attempts = 5,
+@retry_interval = 5;
+GO
+
+-- Создание расписания для выполнения резервного копирования журнала транзакций каждый час
+EXEC dbo.sp_add_schedule
+@schedule_name = N'Hourly_Transaction_Log_Backup1',
+@freq_type = 4,  -- daily
+@freq_interval = 1,  -- every day
+@freq_subday_type = 4,  -- hours
+@freq_subday_interval = 1;  -- every hour
+GO
+
+-- Присоединение расписания к заданию
+EXEC dbo.sp_attach_schedule
+@job_name = N'Full_Backup_job',
+@schedule_name = N'Hourly_Transaction_Log_Backup1';
+GO
+
+-- Присоединение задания к серверу
+EXEC dbo.sp_add_jobserver
+@job_name = N'Full_Backup_job';
+GO
