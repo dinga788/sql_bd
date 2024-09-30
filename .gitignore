@@ -74,6 +74,21 @@ where id in(select min(id) from ycenic union all select max(id) from ycenic);
 end;
 go
 
+--или
+CREATE PROCEDURE DeleteMaxValue
+AS
+BEGIN
+    DECLARE @MaxValue INT;
+
+    -- Получаем максимальное значение из столбца ПМ03
+    SELECT @MaxValue = MAX([ПМ03])
+    FROM Zachet;
+    
+    -- Удаляем строки с максимальным значением
+    DELETE FROM Zachet
+    WHERE [ПМ03] = @MaxValue;
+END;
+
 --проверка
 EXEC Dell 'familia', 'nomer';
 
