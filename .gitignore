@@ -1,0 +1,232 @@
+USE ПОДГОТОВКА_К_ЭКЗАМЕНУ
+----------------------------------------------------------------------------------------------------------создание базы данных 
+CREATE DATABASE ПОДГОТОВКА_К_ЭКЗАМЕНУ
+--русский язык
+ALTER DATABASE ПОДГОТОВКА_К_ЭКЗАМЕНУ
+COLLATE Cyrillic_General_CI_Ai
+GO
+----------------------------------------------------------------------------------------------------------создание таблиц
+CREATE TABLE ILIA(
+SHIFR INT NOT NULL IDENTITY(1,1),
+GOT INT,
+PRIMARY KEY (SHIFR)
+);
+
+CREATE TABLE DASHA(
+SHIFR1 INT NOT NULL IDENTITY(1,1),
+GOT INT,
+GOTS INT,
+PRIMARY KEY (GOT)
+);
+
+CREATE TABLE SEVA(
+SHIFR2 INT NOT NULL IDENTITY(1,1),
+GOTS INT,
+PRIMARY KEY(GOTS)
+);
+------------------------------------------------------------------------------------------------------------Создание внешних ключей
+--СНАЧАЛО МЫ ПИШЕМ ГЛАВНУЮ ТАБЛИЦУ(ILIA), А ПОТОМ ТУ, КОТОРАЯ СОЕДИНЯЕТСЯ К ЭТОЙ ТАБЛИЦЕ(DASHA)
+ALTER TABLE ILIA
+ADD CONSTRAINT GOT_FK FOREIGN KEY (GOT) REFERENCES DASHA(GOT) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE DASHA
+ADD CONSTRAINT GOTS_FK FOREIGN KEY (GOTS) REFERENCES SEVA(GOTS) ON DELETE CASCADE ON UPDATE CASCADE;
+------------------------------------------------------------------------------------------------------------СОЗДАНИЕ ЧЕКОВ
+ALTER TABLE ILIA
+ADD CONSTRAINT GOT_CH
+CHECK (GOT LIKE ('%[9]'))
+
+ALTER TABLE DASHA
+ADD CONSTRAINT GOTS_CH
+CHECK (GOTS LIKE ('[+7][(][*][*][*][*][*][*][*][*][*][*][)]'))
+------------------------------------------------------------------------------------------------------------Вносим данные
+INSERT INTO SEVA(GOTS)
+VALUES
+('+7(1111111111)'),
+('+7(1111111112)'),
+('+7(1111111113)');
+------------------------------------------------------------------------------------------------------------Создаём триггер и привязываем его к таблице в БД, он срабатывает при добавлении новых даных в таблицу
+--1
+-- СНАЧАЛО ПИШЕМ НАЗВАНИЕ ТРИГЕРА(dbo.ILIA1), ПОТОМ ТАБЛИЦУ, КОТОРОЙ НАКАЛАДЫВАЕТСЯ ТРИГЕР(dbo.ILIA), ДАЛЕЕ ПИШЕМ, ПОСЛЕ ЧЕГО
+--БУДЕТ СРАБАТЫВАТЬ ТРИГЕР(UPDATE), ДАЛЕЕ ПИШЕМ, ЧТО БУДЕТ ВЫВОДИТЬ('URA URA')
+CREATE TRIGGER dbo.ILIA1
+ON dbo.ILIA
+AFTER UPDATE
+AS PRINT 'URA URA'
+GO
+--PROVERKA
+UPDATE dbo.ILIA
+SET GOT = '4359'
+WHERE SHIFR = 1;
+
+--2
+--AS IF @@ROWCOUNT <> 0: Проверяет количество удаленных строк. Если оно не равно нулю, то выполняется следующий блок кода.
+CREATE TRIGGER dbo.DASHA1
+ON dbo.DASHA
+AFTER DELETE
+AS IF @@ROWCOUNT <> 0
+PRINT 'NO NO NO'
+--PROVERKA
+DELETE FROM dbo.DASHA
+WHERE SHIFR1 = 1;
+
+--3
+--Этот триггер копирует вставленные записи из таблицы ILIA в таблицу DASHA.
+--AS BEGIN: Начало блока кода внутри триггера.
+--INSERT INTO DASHA (GOT): Команда вставки в таблицу DASHA.
+--SELECT GOT: Выбор столбца GOT из таблицы inserted, которая содержит вставленные записи.
+--FROM inserted: Таблица inserted содержит вставленные записи.
+--END: Конец блока кода внутри триггера.
+CREATE TRIGGER ADD_ILYA_RECORD
+ON dbo.ILIA
+AFTER INSERT
+AS BEGIN
+    INSERT INTO DASHA (GOT)
+    SELECT GOT
+    FROM inserted;
+END
+GO
+--PROVERKA
+INSERT INTO ILIA (GOT) VALUES (10);
+SELECT * FROM DASHA;
+
+--4
+CREATE TRIGGER AFTER_INSERT_SEVA
+ON dbo.SEVA
+AFTER INSERT
+AS
+BEGIN
+    PRINT 'Новая запись была добавлена в таблицу SEVA!';
+END
+GO
+--PROVERKA
+INSERT INTO SEVA (GOTS) VALUES (10);
+------------------------------------------------------------------------------------------------------------создание процедур
+--1
+--( @GOT INT ): Определяет входной параметр процедуры @GOT типа INT
+--INSERT INTO ILIA (GOT): Команда вставки в таблицу ILIA.
+--VALUES (@GOT): Значение, которое будет вставлено в таблицу ILIA.
+CREATE PROC NEW_DEBIK
+(
+@GOT INT
+)
+AS
+INSERT INTO ILIA (GOT)
+VALUES (@GOT)
+GO
+--PROVERKA
+EXEC NEW_DEBIK
+	@GOT = '12341249';
+
+--2
+--( @GOTS INT, @NEW_GOTS INT ): Определяет входные параметры процедуры @GOTS и @NEW_GOTS типа INT
+--UPDATE SEVA SET GOTS = @NEW_GOTS: Команда обновления таблицы SEVA, где GOTS устанавливается равным значению @NEW_GOTS.
+--WHERE GOTS = @GOTS: Условие для определения строк, которые будут обновлены.
+CREATE PROC UPDATE_DEBIK
+(
+@GOTS INT,
+@NEW_GOTS INT
+)
+AS
+UPDATE SEVA SET GOTS = @NEW_GOTS
+WHERE GOTS = @GOTS
+GO
+--PROVERKA
+EXEC UPDATE_DEBIK
+	@GOTS = 5,
+	@NEW_GOTS = 10;
+
+--3
+CREATE PROC DELETE_DEBIK
+(
+@GOTS INT
+)
+AS
+DELETE FROM DASHA
+WHERE [GOTS] = @GOTS
+GO
+--PROVERKA
+EXEC DELETE_DEBIK
+	@GOTS = '2354'
+
+--4
+CREATE PROC FIND_DEBIK
+(
+@SHIFR INT
+)
+AS
+SELECT [SHIFR], [GOT]
+FROM ILIA
+GO
+--PROVERKA
+EXEC FIND_DEBIK
+@SHIFR = '1';
+------------------------------------------------------------------------------------------------------------Разработка и создание представлений
+--1
+--SELECT I.SHIFR, I.GOT, D.GOTS: Выбирает поля SHIFR и GOT из таблицы ILIA, а также поле GOTS из таблицы DASHA
+--FROM ILIA I: Определяет таблицу ILIA, из которой берутся данные
+--JOIN DASHA D ON I.GOT = D.GOT AND I.SHIFR = D.SHIFR1: Объединяет таблицы ILIA и DASHA по условиям I.GOT = D.GOT и I.SHIFR = D.SHIFR1.
+CREATE VIEW ILIA_INFO AS
+SELECT I.SHIFR, I.GOT, D.GOTS
+FROM ILIA I
+JOIN DASHA D ON I.GOT = D.GOT AND I.SHIFR = D.SHIFR1
+WHERE I.GOT > 10 AND D.GOTS > 20;
+--PROVERKA
+SELECT * FROM ILIA_INFO
+
+--2
+--SELECT I.SHIFR, SUM(I.GOT + D.GOT) AS TOTALGOT: Выбирает поле SHIFR из таблицы ILIA и вычисляет сумму значений GOT из обеих таблиц, обозначая её как TOTALGOT
+--FROM ILIA I JOIN DASHA D ON I.SHIFR = D.SHIFR1: Объединяет таблицы ILIA и DASHA по условию I.SHIFR = D.SHIFR1
+--GROUP BY I.SHIFR: Группирует результаты по значению SHIFR из таблицы ILIA
+CREATE VIEW V_SUMMARY_INFO AS
+SELECT I.SHIFR, SUM(I.GOT + D.GOT) AS TOTALGOT
+FROM ILIA I JOIN DASHA D ON I.SHIFR = D.SHIFR1
+GROUP BY I.SHIFR
+--PROVERKA
+SELECT * FROM V_SUMMARY_INFO;
+
+--3
+--SELECT GOT, COUNT(*) AS NumberOfRecords: Выбирает поле GOT и считает количество записей для каждого значения GOT, обозначая количество записей как NumberOfRecords
+--Это представление позволяет подсчитать количество записей для каждого значения GOT в таблице ILIA
+CREATE VIEW V_GROUPING_INFO AS
+SELECT GOT, COUNT(*) AS NumberOfRecords
+FROM ILIA
+GROUP BY GOT;
+--PROVERKA
+SELECT * FROM V_GROUPING_INFO;
+------------------------------------------------------------------------------------------------------------создание индексов
+create Index Shifr_Clienta on ILIA([SHIFR])
+create Index Shifr_Clienta on DASHA([SHIFR1])
+create Index Shifr_Clienta on SEVA([SHIFR2])
+
+sp_helpindex ILIA
+sp_helpindex DASHA
+sp_helpindex SEVA
+------------------------------------------------------------------------------------------------------------создание пользователей
+create login ILIA with password = 'P@ssw0rd'
+create login DASHA with password = 'P@ssw0rd'
+create login SEVA with password = 'P@ssw0rd'
+
+CREATE USER ILIA FOR LOGIN ILIA;
+CREATE USER DASHA FOR LOGIN DASHA;
+CREATE USER SEVA FOR LOGIN SEVA;
+
+CREATE ROLE STUDENT
+
+sp_addrolemember 'STUDENT', 'ILIA'
+sp_addrolemember 'STUDENT', 'DASHA'
+sp_addrolemember 'STUDENT', 'SEVA'
+
+--Предоставляет роли STUDENT право на выборку данных из таблицы ILIA
+GRANT SELECT ON ILIA TO STUDENT;
+--Предоставляет роли STUDENT право на выборку данных из таблицы DASHA и обновление только поля SHIFR1
+GRANT SELECT, UPDATE(SHIFR1) ON DASHA TO STUDENT;
+------------------------------------------------------------------------------------------------------------Резервное копирование
+USE ПОДГОТОВКА_К_ЭКЗАМЕНУ;
+GO
+BACKUP DATABASE ПОДГОТОВКА_К_ЭКЗАМЕНУ
+TO DISK = 'D:\REZERVNOKOPI\SQLTestDB.bak'
+   WITH FORMAT,
+      MEDIANAME = 'SQLServerBackups',
+      NAME = 'Full Backup of SQLTestDB';
+GO
